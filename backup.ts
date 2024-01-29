@@ -164,7 +164,7 @@ export const makeBackup = async (opts?: TOptions) => {
     spinner.start();
     const recipient = parsedConfig.gpgKeyRecipient;
     await exec(
-      `gpg --yes --batch -e -r ${recipient} -o .tmp/${backupName}/backup.tar.gz.gpg .tmp/${backupName}/backup.tar.gz`
+      `gpg --yes --trust-model always --batch -e -r ${recipient} -o .tmp/${backupName}/backup.tar.gz.gpg .tmp/${backupName}/backup.tar.gz`
     ).catch((e) => {
       logger.log("");
       logger.error("Error encrypting backup");

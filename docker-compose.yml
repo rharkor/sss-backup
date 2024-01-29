@@ -4,9 +4,9 @@ services:
   sss-backup:
     image: rg.fr-par.scw.cloud/sss-backup/sss-backup:latest
     volumes:
-      - /:/hostroot:ro # Mount entire host file system to /hostroot in read-only mode
+      - /:/backup:ro # Mount entire host file system to /backup in read-only mode
       - ./bkp-config.json:/usr/src/app/bkp-config.json:ro
     environment:
-      - HOST_ROOT=/hostroot
+      - HOST_ROOT=/backup
     env_file:
       - .env

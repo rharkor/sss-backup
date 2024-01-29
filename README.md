@@ -79,10 +79,20 @@ wget -q https://raw.githubusercontent.com/rharkor/sss-backup/main/docker-compose
 
 Modify the `.env` and `bkp-config.json` files to your needs.
 
+_In oder to have GPG_KEY_PATH follow the encryption steps above. (export the key to a file)_
+
 #### Run the container
+
+With cron:
 
 ```bash
 docker compose up -d
+```
+
+One time:
+
+```bash
+docker run --rm -v $(pwd)/bkp-config.json:/usr/src/app/bkp-config.json:ro -v $(pwd)/.env:/usr/src/app/.env:ro -v /:/backup:ro -it -e HOST_ROOT='/backup' --env-file .env rg.fr-par.scw.cloud/sss-backup/sss-backup:latest
 ```
 
 ## Development
