@@ -73,27 +73,11 @@ tar -xvzf backup.tar.gz
 
 ### Running
 
-#### Create the docker-compose.yml file
-
 ```bash
-wget https://raw.githubusercontent.com/rharkor/sss-backup/main/docker-compose.yml
+wget -r --no-parent https://github.com/rharkor/sss-backup/main/init
 ```
 
-#### Setup the environment variables
-
-```bash
-wget https://raw.githubusercontent.com/rharkor/sss-backup/main/.env.example -O .env
-```
-
-Modify the .env file with your own values
-
-#### Setup your config file
-
-```bash
-wget https://raw.githubusercontent.com/rharkor/sss-backup/main/bkp-config.json.example -O bkp-config.json
-```
-
-Modify the bkp-config.json file with your own values
+Modify the .env and bkp-config.jsonfile with your own values
 
 #### Run the container
 
