@@ -10,3 +10,4 @@ services:
       - HOST_ROOT=/backup
     env_file:
       - .env
+    restart: unless-stopped
