@@ -28,7 +28,7 @@ export const makeBackup = async (opts?: TOptions) => {
   const start = Date.now();
   const config = await fs.readFile("./bkp-config.json", "utf-8").catch((e) => {
     logger.error("Error reading config file", e);
-    process.exit(1);
+    throw e;
   });
   const parsedConfig = JSON.parse(config) as {
     paths: string[] | undefined;
@@ -42,12 +42,12 @@ export const makeBackup = async (opts?: TOptions) => {
 
   if (!parsedConfig.paths) {
     logger.error("No paths to backup in config");
-    process.exit(1);
+    throw new Error("No paths to backup in config");
   }
 
   if (!parsedConfig.gpgKeyRecipient) {
     logger.error("No GPG key recipient in config");
-    process.exit(1);
+    throw new Error("No GPG key recipient in config");
   }
 
   const { paths: _paths, ignore } = parsedConfig;
@@ -74,7 +74,7 @@ export const makeBackup = async (opts?: TOptions) => {
             logger.log("");
             logger.error(`Error getting size of ${path}`);
             logger.subLog(e);
-            process.exit(1);
+            throw e;
           }
         );
         const size = parseInt(stdout.split("\t")[0]);
@@ -105,7 +105,7 @@ export const makeBackup = async (opts?: TOptions) => {
     });
     if (!confirm) {
       logger.log("Aborting backup");
-      process.exit(0);
+      return;
     }
   }
 
@@ -121,7 +121,7 @@ export const makeBackup = async (opts?: TOptions) => {
       logger.log("");
       logger.error("Error creating tmp directory");
       logger.subLog(e);
-      process.exit(1);
+      throw e;
     });
   await exec(
     `tar ${exclusions} -czf .tmp/${backupName}/backup.tar.gz ${paths.join(" ")}`
@@ -129,7 +129,7 @@ export const makeBackup = async (opts?: TOptions) => {
     logger.log("");
     logger.error("Error creating backup");
     logger.subLog(e);
-    process.exit(1);
+    throw e;
   });
   spinner.stop(true);
   logger.success("Backup created");
@@ -152,7 +152,7 @@ export const makeBackup = async (opts?: TOptions) => {
         logger.log("");
         logger.error("Error deleting tmp directory");
         logger.subLog(e);
-        process.exit(1);
+        throw e;
       });
     spinner.stop(true);
   };
@@ -278,7 +278,7 @@ export const makeBackup = async (opts?: TOptions) => {
     }
   } catch (e) {
     await deleteTmp();
-    process.exit(1);
+    throw e;
   }
   await deleteTmp();
 
@@ -288,5 +288,5 @@ export const makeBackup = async (opts?: TOptions) => {
   );
 
   s3Client.destroy();
-  process.exit(0);
+  return;
 };
