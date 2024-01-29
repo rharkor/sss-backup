@@ -3,7 +3,8 @@ import { logger } from "./utils/logger";
 import { makeBackup } from "./backup";
 
 //? Do a task every day at 2AM
-export const cron = (cronRate: string) =>
+export const cron = (cronRate: string) => {
+  logger.info(`Cron has been set to ${cronRate}`);
   new CronJob(
     cronRate,
     async () => {
@@ -29,3 +30,4 @@ export const cron = (cronRate: string) =>
     true,
     "Europe/Paris"
   );
+};

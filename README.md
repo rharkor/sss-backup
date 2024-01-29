@@ -74,10 +74,10 @@ tar -xvzf backup.tar.gz
 ### Running
 
 ```bash
-wget -r --no-parent https://github.com/rharkor/sss-backup/main/init
+wget -q https://raw.githubusercontent.com/rharkor/sss-backup/main/docker-compose.yml -O docker-compose.yml && wget -q https://raw.githubusercontent.com/rharkor/sss-backup/main/.env.example -O .env && wget -q https://raw.githubusercontent.com/rharkor/sss-backup/main/bkp-config.json -O bkp-config.json
 ```
 
-Modify the .env and bkp-config.jsonfile with your own values
+Modify the `.env` and `bkp-config.json` files to your needs.
 
 #### Run the container
 
@@ -100,6 +100,6 @@ bun run index.ts
 ```
 
 ```bash
-docker build -t rg.fr-par.scw.cloud/sss-backup/sss-backup:latest -f docker/Dockerfile  .
+docker build -t rg.fr-par.scw.cloud/sss-backup/sss-backup:latest .
 docker push rg.fr-par.scw.cloud/sss-backup/sss-backup:latest
 ```
