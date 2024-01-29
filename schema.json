@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "paths": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of paths to include in the backup."
+    },
+    "ignore": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of directories or files to ignore during the backup."
+    },
+    "gpgKeyRecipient": {
+      "type": "string",
+      "description": "GPG key recipient to encrypt the backup with."
+    },
+    "noUpload": {
+      "type": "boolean",
+      "description": "Do not upload the backup to the cloud."
+    },
+    "s3Folder": {
+      "type": "string",
+      "description": "S3 folder to upload the backup to."
+    },
+    "deleteOlderThan": {
+      "type": "string",
+      "description": "Delete backups created longer ago than the specified duration in ms."
+    },
+    "deleteAll": {
+      "type": "boolean",
+      "description": "Delete all backups."
+    }
+  },
+  "required": ["paths", "gpgKeyRecipient"]
+}

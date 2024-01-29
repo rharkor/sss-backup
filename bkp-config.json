@@ -1,0 +1,26 @@
+{
+  "$schema": "https://raw.githubusercontent.com/rharkor/sss-backup/main/schema.json",
+  "paths": ["/var/www", "/etc", "/home"],
+  "ignore": [
+    ".local",
+    ".cache",
+    ".config",
+    ".gradle",
+    ".npm",
+    ".steam",
+    ".android",
+    ".nvm",
+    ".vscode",
+    ".wine",
+    ".bun",
+    "node_modules",
+    "build",
+    "dist",
+    ".next",
+    ".angular",
+    "cache",
+    ".tmp",
+    "vendor"
+  ],
+  "gpgKeyRecipient": "<your_recipient_email>"
+}

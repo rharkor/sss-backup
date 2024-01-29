@@ -1,0 +1,11 @@
+version: "3.8"
+
+services:
+  sss-backup:
+    image: rg.fr-par.scw.cloud/sss-backup/sss-backup-start:latest
+    volumes:
+      - /:/hostroot:ro # Mount entire host file system to /hostroot in read-only mode
+    environment:
+      - HOST_ROOT=/hostroot
+    env_file:
+      - .env
