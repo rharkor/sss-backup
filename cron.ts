@@ -10,6 +10,7 @@ export const cron = (cronRate: string) => {
     async () => {
       const name = "auto-backup";
       const now = new Date();
+      logger.info(`[${now.toLocaleString()}] ${name} started`);
       await makeBackup({
         ignoreWeightEstimation: true,
         notInteractive: true,
