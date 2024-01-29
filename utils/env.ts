@@ -1,4 +1,6 @@
 import { logger } from "./logger";
+import { config } from "dotenv";
+config();
 
 const getValue = <
   R extends boolean,

@@ -90,13 +90,13 @@ docker compose up -d
 To install dependencies:
 
 ```bash
-bun install
+npm install
 ```
 
 To run:
 
 ```bash
-bun run index.ts
+npm run index.ts
 ```
 
 ```bash

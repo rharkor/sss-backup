@@ -3,11 +3,10 @@
   "module": "index.ts",
   "type": "module",
   "scripts": {
-    "start": "bun run index.ts",
-    "cron": "bun run cron.ts"
+    "start": "tsx index.ts",
+    "cron": "tsx cron.ts"
   },
   "devDependencies": {
-    "@types/bun": "latest",
     "@types/cli-spinner": "^0.2.3",
     "@types/inquirer": "^9.0.7"
   },
@@ -19,6 +18,8 @@
     "chalk": "^5.3.0",
     "cli-spinner": "^0.2.10",
     "cron": "^3.1.6",
-    "inquirer": "^9.2.13"
+    "dotenv": "^16.4.1",
+    "inquirer": "^9.2.13",
+    "tsx": "^4.7.0"
   }
 }
