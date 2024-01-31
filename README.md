@@ -110,6 +110,8 @@ Happy backing up with `sss-backup`! 💾 🎉
 
 ## Known issues
 
+This error occurs in the uploading step on large files:
+
 ```bash
       throw er; // Unhandled 'error' event
       ^
@@ -130,4 +132,4 @@ syscall: 'write'
 Node.js v20.11.0
 ```
 
-_No solution found yet_
+**No solution found yet**
