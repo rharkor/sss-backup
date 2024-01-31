@@ -1,6 +1,6 @@
 import iquirer from "inquirer";
 import chalk from "chalk";
-import * as fs from "fs/promises";
+import * as fs from "fs";
 import { logger } from "./utils/logger";
 import { env } from "./utils/env";
 import { promisify } from "util";
@@ -35,10 +35,12 @@ function formatBytes(bytes: number, decimals: number = 2): string {
 
 export const makeBackup = async (opts?: TOptions) => {
   const start = Date.now();
-  const config = await fs.readFile("./bkp-config.json", "utf-8").catch((e) => {
-    logger.error("Error reading config file", e);
-    throw e;
-  });
+  const config = await fs.promises
+    .readFile("./bkp-config.json", "utf-8")
+    .catch((e) => {
+      logger.error("Error reading config file", e);
+      throw e;
+    });
   const parsedConfig = JSON.parse(config) as {
     paths: string[] | undefined;
     ignore: string[] | undefined;
@@ -133,7 +135,7 @@ export const makeBackup = async (opts?: TOptions) => {
   spinner = new Spinner(chalk.hex(textColor)(` Creating backup`));
   spinner.setSpinnerString(18);
   spinner.start();
-  await fs
+  await fs.promises
     .mkdir(`.tmp/${backupName}`, {
       recursive: true,
     })
@@ -156,7 +158,8 @@ export const makeBackup = async (opts?: TOptions) => {
     if (!spinner) {
       return;
     }
-    const size = (await fs.stat(`.tmp/${backupName}/backup.tar.gz`)).size;
+    const size = (await fs.promises.stat(`.tmp/${backupName}/backup.tar.gz`))
+      .size;
     const sizeStr = formatBytes(size);
     spinner.setSpinnerTitle(
       chalk.hex(textColor)(` Creating backup (${sizeStr})`)
@@ -177,7 +180,7 @@ export const makeBackup = async (opts?: TOptions) => {
     spinner = new Spinner(chalk.hex(textColor)(" Deleting backup"));
     spinner.setSpinnerString(18);
     spinner.start();
-    await fs
+    await fs.promises
       .rm(`.tmp/${backupName}`, {
         recursive: true,
       })
@@ -208,21 +211,27 @@ export const makeBackup = async (opts?: TOptions) => {
     logger.success("Backup encrypted");
 
     //* Upload backup
+    //* Upload backup
     if (needUpload) {
       spinner = new Spinner(chalk.hex(textColor)(" Uploading backup"));
       spinner.setSpinnerString(18);
       spinner.start();
+
+      const filePath = `.tmp/${backupName}/backup.tar.gz.gpg`;
+      const fileStream = fs.createReadStream(filePath);
+
       const upload = new Upload({
         client: s3Client,
         params: {
           Bucket: env.S3_BUCKET_NAME,
           Key:
             path.join(parsedConfig.s3Folder ?? "", backupName) + ".tar.gz.gpg",
-          Body: await fs.readFile(`.tmp/${backupName}/backup.tar.gz.gpg`),
+          Body: fileStream,
         },
-        partSize: 5 * 1024 * 1024, // 5 MB
-        queueSize: 4, // 4 concurrent uploads
+        partSize: 5 * 1024 * 1024, // Adjust part size as needed, this is 5 MB
+        queueSize: 4, // Adjust queue size as needed
       });
+
       upload.on("httpUploadProgress", (progress) => {
         if (!spinner || !progress.total || !progress.loaded) {
           return;
@@ -235,6 +244,7 @@ export const makeBackup = async (opts?: TOptions) => {
           )
         );
       });
+
       await upload.done().catch((e) => {
         logger.log("");
         logger.error("Error uploading backup");

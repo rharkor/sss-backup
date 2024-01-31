@@ -86,12 +86,14 @@ _In oder to have GPG_KEY_PATH follow the encryption steps above. (export the key
 With cron:
 
 ```bash
+docker compose pull
 docker compose up -d
 ```
 
 One time:
 
 ```bash
+docker pull rg.fr-par.scw.cloud/sss-backup/sss-backup:latest
 docker run --rm -v $(pwd)/bkp-config.json:/usr/src/app/bkp-config.json:ro -v $(pwd)/.env:/usr/src/app/.env:ro -v /:/backup:ro -v $(pwd)/.tmp:/usr/src/app/.tmp:rw -it -e HOST_ROOT='/backup' --env-file .env rg.fr-par.scw.cloud/sss-backup/sss-backup:latest
 ```
 
