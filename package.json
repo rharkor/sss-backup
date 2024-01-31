@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.501.0",
+    "@aws-sdk/lib-storage": "^3.503.1",
     "chalk": "^5.3.0",
     "cli-spinner": "^0.2.10",
     "cron": "^3.1.6",

@@ -7,11 +7,8 @@ import { promisify } from "util";
 import { exec as oExec } from "child_process";
 import { Spinner } from "cli-spinner";
 import { s3Client } from "./utils/s3";
-import {
-  DeleteObjectCommand,
-  ListObjectsV2Command,
-  PutObjectCommand,
-} from "@aws-sdk/client-s3";
+import { DeleteObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
+import { Upload } from "@aws-sdk/lib-storage";
 import path from "path";
 const exec = promisify(oExec);
 
@@ -179,23 +176,33 @@ export const makeBackup = async (opts?: TOptions) => {
       spinner = new Spinner(chalk.hex(textColor)(" Uploading backup"));
       spinner.setSpinnerString(18);
       spinner.start();
-      await s3Client
-        .send(
-          new PutObjectCommand({
-            Bucket: env.S3_BUCKET_NAME,
-            Key: path.join(
-              parsedConfig.s3Folder ?? "",
-              backupName + ".tar.gz.gpg"
-            ),
-            Body: await fs.readFile(`.tmp/${backupName}/backup.tar.gz.gpg`),
-          })
-        )
-        .catch((e) => {
-          logger.log("");
-          logger.error("Error uploading backup");
-          logger.subLog(e);
-          throw e;
-        });
+      const upload = new Upload({
+        client: s3Client,
+        params: {
+          Bucket: env.S3_BUCKET_NAME,
+          Key:
+            path.join(parsedConfig.s3Folder ?? "", backupName) + ".tar.gz.gpg",
+          Body: await fs.readFile(`.tmp/${backupName}/backup.tar.gz.gpg`),
+        },
+      });
+      upload.on("httpUploadProgress", (progress) => {
+        if (!spinner || !progress.total || !progress.loaded) {
+          return;
+        }
+        spinner.setSpinnerTitle(
+          chalk.hex(textColor)(
+            ` Uploading backup (${Math.round(
+              (progress.loaded / progress.total) * 100
+            )}%)`
+          )
+        );
+      });
+      await upload.done().catch((e) => {
+        logger.log("");
+        logger.error("Error uploading backup");
+        logger.subLog(e);
+        throw e;
+      });
       spinner.stop(true);
       logger.success("Backup uploaded");
     }
