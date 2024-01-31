@@ -213,46 +213,76 @@ export const makeBackup = async (opts?: TOptions) => {
     //* Upload backup
     //* Upload backup
     if (needUpload) {
-      spinner = new Spinner(chalk.hex(textColor)(" Uploading backup"));
-      spinner.setSpinnerString(18);
-      spinner.start();
+      let attempts = 0;
+      const maxAttempts = 5;
+      let success = false;
+      while (!success && attempts < maxAttempts) {
+        attempts++;
+        try {
+          spinner = new Spinner(chalk.hex(textColor)(" Uploading backup"));
+          spinner.setSpinnerString(18);
+          spinner.start();
 
-      const filePath = `.tmp/${backupName}/backup.tar.gz.gpg`;
-      const fileStream = fs.createReadStream(filePath);
+          const filePath = `.tmp/${backupName}/backup.tar.gz.gpg`;
+          const fileStream = fs.createReadStream(filePath);
 
-      const upload = new Upload({
-        client: s3Client,
-        params: {
-          Bucket: env.S3_BUCKET_NAME,
-          Key:
-            path.join(parsedConfig.s3Folder ?? "", backupName) + ".tar.gz.gpg",
-          Body: fileStream,
-        },
-        partSize: 5 * 1024 * 1024, // Adjust part size as needed, this is 5 MB
-        queueSize: 4, // Adjust queue size as needed
-      });
+          const upload = new Upload({
+            client: s3Client,
+            params: {
+              Bucket: env.S3_BUCKET_NAME,
+              Key:
+                path.join(parsedConfig.s3Folder ?? "", backupName) +
+                ".tar.gz.gpg",
+              Body: fileStream,
+            },
+            partSize: 5 * 1024 * 1024, // Adjust part size as needed, this is 5 MB
+            queueSize: 4, // Adjust queue size as needed
+          });
 
-      upload.on("httpUploadProgress", (progress) => {
-        if (!spinner || !progress.total || !progress.loaded) {
-          return;
+          fileStream.on("error", (e) => {
+            logger.log("");
+            logger.error("Error uploading backup");
+            logger.subLog(e);
+            throw e;
+          });
+
+          upload.on("httpUploadProgress", (progress) => {
+            if (!spinner || !progress.total || !progress.loaded) {
+              return;
+            }
+            spinner.setSpinnerTitle(
+              chalk.hex(textColor)(
+                ` Uploading backup (${Math.round(
+                  (progress.loaded / progress.total) * 100
+                )}%)`
+              )
+            );
+          });
+
+          await upload.done().catch((e) => {
+            logger.log("");
+            logger.error("Error uploading backup");
+            logger.subLog(e);
+            throw e;
+          });
+          spinner.stop(true);
+          logger.success("Backup uploaded");
+          success = true;
+        } catch (e) {
+          if (attempts < maxAttempts) {
+            logger.log("");
+            logger.error(
+              `Error uploading backup, retrying (${attempts}/${maxAttempts})`
+            );
+            logger.subLog(e);
+          } else {
+            logger.log("");
+            logger.error("Error uploading backup");
+            logger.subLog(e);
+            throw e;
+          }
         }
-        spinner.setSpinnerTitle(
-          chalk.hex(textColor)(
-            ` Uploading backup (${Math.round(
-              (progress.loaded / progress.total) * 100
-            )}%)`
-          )
-        );
-      });
-
-      await upload.done().catch((e) => {
-        logger.log("");
-        logger.error("Error uploading backup");
-        logger.subLog(e);
-        throw e;
-      });
-      spinner.stop(true);
-      logger.success("Backup uploaded");
+      }
     }
 
     //* Delete old backups
