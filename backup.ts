@@ -10,6 +10,7 @@ import { s3Client } from "./utils/s3";
 import { DeleteObjectCommand, ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
 import path from "path";
+import stream from "stream";
 const exec = promisify(oExec);
 
 let spinner: Spinner | null = null;
@@ -224,22 +225,36 @@ export const makeBackup = async (opts?: TOptions) => {
           spinner.start();
 
           const filePath = `.tmp/${backupName}/backup.tar.gz.gpg`;
+
+          const uploadStream = () => {
+            const pass = new stream.PassThrough();
+            const upload = new Upload({
+              client: s3Client,
+              params: {
+                Bucket: env.S3_BUCKET_NAME,
+                Key:
+                  path.join(parsedConfig.s3Folder ?? "", backupName) +
+                  ".tar.gz.gpg",
+                Body: pass,
+              },
+              partSize: 5 * 1024 * 1024, // Adjust part size as needed, this is 5 MB
+              queueSize: 4, // Adjust queue size as needed
+            });
+            return {
+              writeStream: pass,
+              upload,
+            };
+          };
+          const { writeStream, upload } = uploadStream();
           const fileStream = fs.createReadStream(filePath);
-
-          const upload = new Upload({
-            client: s3Client,
-            params: {
-              Bucket: env.S3_BUCKET_NAME,
-              Key:
-                path.join(parsedConfig.s3Folder ?? "", backupName) +
-                ".tar.gz.gpg",
-              Body: fileStream,
-            },
-            partSize: 5 * 1024 * 1024, // Adjust part size as needed, this is 5 MB
-            queueSize: 4, // Adjust queue size as needed
-          });
-
+          fileStream.pipe(writeStream);
           fileStream.on("error", (e) => {
+            logger.log("");
+            logger.error("Error reading backup file");
+            logger.subLog(e);
+            throw e;
+          });
+          writeStream.on("error", (e) => {
             logger.log("");
             logger.error("Error uploading backup");
             logger.subLog(e);
