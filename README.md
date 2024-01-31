@@ -107,3 +107,27 @@ Keep your backups secure with GPG encryption. Here's how to set it up:
 ---
 
 Happy backing up with `sss-backup`! 💾 🎉
+
+## Known issues
+
+```bash
+      throw er; // Unhandled 'error' event
+      ^
+
+Error: write EPIPE
+at **node_internal_captureLargerStackTrace (node:internal/errors:563:5)
+at **node_internal_errnoException (node:internal/errors:690:12)
+at WriteWrap.onWriteComplete [as oncomplete] (node:internal/stream_base_commons:94:16)
+Emitted 'error' event on TLSSocket instance at:
+at emitErrorNT (node:internal/streams/destroy:169:8)
+at emitErrorCloseNT (node:internal/streams/destroy:128:3)
+at process.processTicksAndRejections (node:internal/process/task_queues:82:21) {
+errno: -32,
+code: 'EPIPE',
+syscall: 'write'
+}
+
+Node.js v20.11.0
+```
+
+_No solution found yet_
