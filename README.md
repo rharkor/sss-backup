@@ -1,117 +1,109 @@
-# sss-backup
+# sss-backup 🛡️
 
-## Getting Started
+<div align="center">
+<img src="https://github.com/rharkor/sss-backup/blob/main/logo.png?raw=true" alt="sss-backup logo" width="200"/>
+</div>
 
-A backup tool to automatically backup files to a S3 bucket.
+## 🚀 Getting Started
 
-_Please note that this tool was developed for unix systems and has not been tested on Windows._
+Welcome to `sss-backup`, your go-to tool for automated file backup to an S3 bucket! 📦
 
-### Encryption
+👉 **Note:** This tool is optimized for Unix systems and hasn't been tested on Windows.
 
-Backups are encrypted using [GPG](https://gnupg.org/). You can generate a key pair using the following command:
+### 🔐 Encryption with GPG
 
-```bash
-gpg --full-generate-key
-```
+Keep your backups secure with GPG encryption. Here's how to set it up:
 
-After generating your key pair, list your keys:
+1. **Generate a Key Pair:**
 
-```bash
-gpg --list-secret-keys --keyid-format LONG
-```
+   ```bash
+   gpg --full-generate-key
+   ```
 
-You'll see output like:
+2. **List Your Keys:**
 
-```markdown
-## /home/you/.gnupg/secring.gpg
+   ```bash
+   gpg --list-secret-keys --keyid-format LONG
+   ```
 
-sec 4096R/<YourKeyID> 2023-01-01 [expires: 2027-01-01]
-uid Your Name <your@email.com>
-```
+   Look for the line starting with `sec` to find your KeyID.
 
-Your KeyID is the part after 4096R/.
+3. **Export Your Public Key:**
 
-You can then export the public key using:
+   ```bash
+   gpg --armor --export <key-id>
+   ```
 
-```bash
-gpg --armor --export <key-id>
-```
+   You can save this to a file or share it directly.
 
-This will print your public key to the console. You can save this to a file or share it directly.
+4. **Import Someone Else's Public Key (not required in backup process):**
+   ```bash
+   gpg --import /path/to/recipientkey.asc
+   ```
+   Optionally, fully trust the imported key if you're confident in its authenticity:
+   ```bash
+   gpg --edit-key <RecipientKeyID>
+   ```
+   In GPG console, type `trust`, select trust level, and then `quit`.
 
-To encrypt data for someone else, you need their public key:
+### 🏃 Running sss-backup
 
-Receive Public Key: Obtain the recipient's public key file (often .asc or .gpg).
+1. **Set Up:**
 
-Import Key:
+   ```bash
+   wget -q https://raw.githubusercontent.com/rharkor/sss-backup/main/docker-compose.yml -O docker-compose.yml && wget -q https://raw.githubusercontent.com/rharkor/sss-backup/main/.env.example -O .env && wget -q https://raw.githubusercontent.com/rharkor/sss-backup/main/bkp-config.json -O bkp-config.json
+   ```
 
-```bash
-gpg --import /path/to/recipientkey.asc
-```
+   Modify `.env` and `bkp-config.json` as needed.
 
-Trust the Key (Optional): You might want to trust the imported key fully if you trust its authenticity.
+2. **Run the Container:**
 
-```bash
-gpg --edit-key <RecipientKeyID>
-```
+   🔄 With Cron:
 
-Then in the GPG console, type trust, choose the level of trust, and then quit.
+   ```bash
+   docker compose pull
+   docker compose up -d
+   ```
 
-#### Decrypting
+   🚀 One Time:
 
-To decrypt a file, you need the private key that matches the public key used to encrypt the file. Then you can run for example:
+   ```bash
+   docker pull rg.fr-par.scw.cloud/sss-backup/sss-backup:latest
+   docker run --rm -v $(pwd)/bkp-config.json:/usr/src/app/bkp-config.json:ro -v $(pwd)/.env:/usr/src/app/.env:ro -v /:/backup:ro -v $(pwd)/.tmp:/usr/src/app/.tmp:rw -it -e HOST_ROOT='/backup' --env-file .env rg.fr-par.scw.cloud/sss-backup/sss-backup:latest
+   ```
 
-```bash
-gpg --output backup.tar.gz --decrypt backup.tar.gz.gpg
-```
+### 📦 Use a backup
 
-Extract the tarball:
+1. First download the backup from your S3 bucket.
+2. **Decrypt**
+   ```bash
+   gpg --output backup.tar.gz --decrypt backup.tar.gz.gpg
+   ```
+3. **Extract**
+   ```bash
+    tar -xvzf backup.tar.gz
+   ```
 
-```bash
-tar -xvzf backup.tar.gz
-```
+## 💻 Development
 
-### Running
+👨‍💻 To Contribute:
 
-```bash
-wget -q https://raw.githubusercontent.com/rharkor/sss-backup/main/docker-compose.yml -O docker-compose.yml && wget -q https://raw.githubusercontent.com/rharkor/sss-backup/main/.env.example -O .env && wget -q https://raw.githubusercontent.com/rharkor/sss-backup/main/bkp-config.json -O bkp-config.json
-```
+1. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
+2. **Run Locally:**
 
-Modify the `.env` and `bkp-config.json` files to your needs.
+   ```bash
+   npm run index.ts
+   ```
 
-_In oder to have GPG_KEY_PATH follow the encryption steps above. (export the key to a file)_
+3. **Build and Push Docker Image:**
+   ```bash
+   docker build -t rg.fr-par.scw.cloud/sss-backup/sss-backup:latest .
+   docker push rg.fr-par.scw.cloud/sss-backup/sss-backup:latest
+   ```
 
-#### Run the container
+---
 
-With cron:
-
-```bash
-docker compose pull
-docker compose up -d
-```
-
-One time:
-
-```bash
-docker pull rg.fr-par.scw.cloud/sss-backup/sss-backup:latest
-docker run --rm -v $(pwd)/bkp-config.json:/usr/src/app/bkp-config.json:ro -v $(pwd)/.env:/usr/src/app/.env:ro -v /:/backup:ro -v $(pwd)/.tmp:/usr/src/app/.tmp:rw -it -e HOST_ROOT='/backup' --env-file .env rg.fr-par.scw.cloud/sss-backup/sss-backup:latest
-```
-
-## Development
-
-To install dependencies:
-
-```bash
-npm install
-```
-
-To run:
-
-```bash
-npm run index.ts
-```
-
-```bash
-docker build -t rg.fr-par.scw.cloud/sss-backup/sss-backup:latest .
-docker push rg.fr-par.scw.cloud/sss-backup/sss-backup:latest
-```
+Happy backing up with `sss-backup`! 💾 🎉
