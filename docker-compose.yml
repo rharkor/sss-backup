@@ -6,6 +6,7 @@ services:
     volumes:
       - /:/backup:ro # Mount entire host file system to /backup in read-only mode
       - ./bkp-config.json:/usr/src/app/bkp-config.json:ro
+      - .tmp:/usr/src/app/.tmp
     environment:
       - HOST_ROOT=/backup
     env_file:

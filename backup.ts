@@ -21,6 +21,18 @@ export type TOptions = {
   noUpload?: boolean;
 };
 
+function formatBytes(bytes: number, decimals: number = 2): string {
+  if (bytes === 0) return "0 Bytes";
+
+  const k = 1024;
+  const dm = decimals < 0 ? 0 : decimals;
+  const sizes = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+}
+
 export const makeBackup = async (opts?: TOptions) => {
   const start = Date.now();
   const config = await fs.readFile("./bkp-config.json", "utf-8").catch((e) => {
@@ -90,6 +102,17 @@ export const makeBackup = async (opts?: TOptions) => {
       }
       logger.info(`${paths[i]}: ${sizeStr}`);
     });
+    logger.log("");
+    const total = sizes.reduce((a, b) => a + b);
+    let totalStr = "";
+    if (total > 1000000) {
+      totalStr = `${Math.round(total / 100000) / 10} GB`;
+    } else if (total > 1000) {
+      totalStr = `${Math.round(total / 100) / 10} MB`;
+    } else {
+      totalStr = `${total} KB`;
+    }
+    logger.info("Total size: " + totalStr);
   }
 
   //* Confirm backup
@@ -107,7 +130,7 @@ export const makeBackup = async (opts?: TOptions) => {
   }
 
   //* Create backup
-  spinner = new Spinner(chalk.hex(textColor)(" Creating backup"));
+  spinner = new Spinner(chalk.hex(textColor)(` Creating backup`));
   spinner.setSpinnerString(18);
   spinner.start();
   await fs
@@ -120,7 +143,7 @@ export const makeBackup = async (opts?: TOptions) => {
       logger.subLog(e);
       throw e;
     });
-  await exec(
+  const tar = exec(
     `tar ${exclusions} -czf .tmp/${backupName}/backup.tar.gz ${paths.join(" ")}`
   ).catch((e) => {
     logger.log("");
@@ -128,6 +151,19 @@ export const makeBackup = async (opts?: TOptions) => {
     logger.subLog(e);
     throw e;
   });
+  const tarInterval = setInterval(async () => {
+    // Each 5 seconds, update the spinner with the current size of the backup
+    if (!spinner) {
+      return;
+    }
+    const size = (await fs.stat(`.tmp/${backupName}/backup.tar.gz`)).size;
+    const sizeStr = formatBytes(size);
+    spinner.setSpinnerTitle(
+      chalk.hex(textColor)(` Creating backup (${sizeStr})`)
+    );
+  }, 5000);
+  await tar;
+  clearInterval(tarInterval);
   spinner.stop(true);
   logger.success("Backup created");
 
@@ -184,6 +220,8 @@ export const makeBackup = async (opts?: TOptions) => {
             path.join(parsedConfig.s3Folder ?? "", backupName) + ".tar.gz.gpg",
           Body: await fs.readFile(`.tmp/${backupName}/backup.tar.gz.gpg`),
         },
+        partSize: 5 * 1024 * 1024, // 5 MB
+        queueSize: 4, // 4 concurrent uploads
       });
       upload.on("httpUploadProgress", (progress) => {
         if (!spinner || !progress.total || !progress.loaded) {
