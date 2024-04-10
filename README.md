@@ -1,5 +1,7 @@
 # sss-backup 🛡️
 
+## Moved to https://github.com/rharkor/sermin
+
 <div align="center">
 <img src="https://github.com/rharkor/sss-backup/blob/main/logo.png?raw=true" alt="sss-backup logo" width="200"/>
 </div>
